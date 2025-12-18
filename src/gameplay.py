@@ -4,7 +4,7 @@ import os
 import random
 import re
 
-from src.utils import print_player_board, print_enemy_board
+from src.utils import print_player_board, print_enemy_board, bot_choose_move, bot_process_result
 
 Letters = {"A": 0, "B": 1, "C": 2,
                "D": 3, "E": 4, "F": 5,
@@ -98,10 +98,11 @@ def write_csv(turn, p_move, p_res, b_move, b_res, player_board, bot_board):
             bot_board.tolist()
         ])
 
-
 def game_loop(player_board, bot_board):
     turn = 1
 
+    os.makedirs(os.path.dirname(DATA_PATH), exist_ok=True)
+    
     with open(DATA_PATH, "w", newline="") as f:
         csv.writer(f).writerow([
             "turn",
@@ -109,6 +110,9 @@ def game_loop(player_board, bot_board):
             "bot_move", "bot_result",
             "player_board", "bot_board"
         ])
+
+    available_cells = set((x, y) for x in range(10) for y in range(10))
+    bot_state = {"mode": "RANDOM", "hits": [], "axis": None}
 
     while True:
         print(f"\n--- ХОД {turn} ---")
@@ -130,19 +134,20 @@ def game_loop(player_board, bot_board):
         if p_res == "hit" and ship_destroyed(bot_board, px, py):
             mark_around_destroyed(bot_board, px, py)
 
-        while True:
-            bx, by = random.randint(0, 9), random.randint(0, 9)
-            b_res = shoot(player_board, bx, by)
-            if b_res != "repeat":
-                break
+        bx, by = bot_choose_move(player_board, bot_state, available_cells)
+        available_cells.remove((bx, by))
+        b_res = shoot(player_board, bx, by)
 
-        if b_res == "hit" and ship_destroyed(player_board, bx, by):
+        ship_destroyed_flag = ((b_res == "hit") and ship_destroyed(player_board, bx, by))
+        if ship_destroyed_flag:
             mark_around_destroyed(player_board, bx, by)
+
+        bot_process_result(bot_state, bx, by, b_res, ship_destroyed_flag)
 
         write_csv(
             turn,
             move, p_res,
-            f"{bx},{by}", b_res,
+            f"{chr(bx + 65)}{by+1}", b_res,
             player_board,
             bot_board
         )

@@ -14,7 +14,7 @@ This is readme on game of Battleship (aka python final project).
 
 3. How you update and display the game state?
 
-   Through reading and updating .csv files with both player and bot boards. I also have game logs in another csv file, that i don't use, but assignment stated i should have it, so...
+   My project logic holds data on both boards, turns and such and updates it in game loop. I also have game logs in another csv files, that i don't use, but assignment stated i should have it, so...
    In those scv's there are just simple tables with numbers, that identify current state if the cell.
 
 4. Any design decisions or trade-offs
